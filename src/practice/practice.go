@@ -37,7 +37,7 @@ func fileRead(filename string) {
 		for _, value := range sectionValues {
 			key := strings.Split(value, "=")[0]
 			val := strings.Split(value, "=")[1]
-			valInt, _ := strconv.Atoi(val)
+			valInt, err := strconv.Atoi(val)
 			if err != nil {
 				fmt.Println(err)
 				return
