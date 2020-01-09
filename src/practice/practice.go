@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -18,6 +20,8 @@ type SectionVal struct {
 }
 
 func fileRead(filename string) {
+	//라인단위
+	//예외처리
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Println(err)
@@ -33,7 +37,7 @@ func fileRead(filename string) {
 		sec.name = sectionName
 		strValues := strings.Split(value, "]")[1]
 		strValues = strings.TrimSpace(strValues)
-		sectionValues := strings.Split(strValues, "\r\n")
+		sectionValues := strings.Split(strValues, "\r\n") // crlf lf
 		for _, value := range sectionValues {
 			key := strings.Split(value, "=")[0]
 			val := strings.Split(value, "=")[1]
@@ -65,5 +69,23 @@ func Print(results []Section) {
 
 func main() {
 	fileRead("src/practice/config.conf")
+
+	fo, err := os.Open("src/practice/config.conf")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer fo.Close()
+
+	reader := bufio.NewReader(fo)
+	for {
+		line, isPrefix, err := reader.ReadLine()
+		if isPrefix || err != nil {
+			break
+		}
+		fmt.Println(string(line))
+		fmt.Println("gdgdgdgd")
+
+	}
 
 }
