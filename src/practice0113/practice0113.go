@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -17,8 +18,10 @@ type MyConfig struct {
 
 func (app *MyConfig) Contains(str string, c string) bool {
 	for _, value := range str {
-		if c == string(value) {
-			return true
+		for _, cValue := range c{
+			if cValue == value {
+				return true
+			}
 		}
 	}
 	return false
@@ -36,9 +39,10 @@ func (app *MyConfig) Find(str string, c string) int {
 const whiteCharacter string = "\n\r \t"
 
 func (app *MyConfig) removeWhiteSpace(line string) string {
+	var c string
 	for {
-		linechar := string(line[0])
-		if app.Contains(whiteCharacter, linechar) {
+		c = string(line[0])
+		if app.Contains(c, whiteCharacter) {
 			line = line[1:]
 		} else {
 			break
@@ -46,8 +50,8 @@ func (app *MyConfig) removeWhiteSpace(line string) string {
 	}
 
 	for {
-		linechar := string(line[len(line)-1])
-		if app.Contains(whiteCharacter, linechar) {
+		c = string(line[len(line)-1])
+		if app.Contains(c, whiteCharacter) {
 			line = line[:len(line)-1]
 		} else {
 			break
@@ -65,24 +69,28 @@ func (app *MyConfig) Init(confFile string) (ret map[string]interface{}, err erro
 	defer fo.Close()
 
 	// 2. config를 파싱한다.
-	retM, err := app.Parse(fo)
-	return retM, err
+	ret, err = app.Parse(fo)
+	return ret, err
 }
 
-func (app *MyConfig) IsSection(line string) bool {
+func (app *MyConfig) IsSection(line string) (bool, error) {
 	var sBracketF string = "["
 	var sBracketB string = "]"
 	if check := app.Find(line, sBracketF); check == 0 {
 		if check := app.Find(line, sBracketB); check == len(line)-1 {
-			return true
+			return true, nil
 		}
+		return false, fmt.Errorf(line + " : ]가 없습니다.")
 	}
-	return false
+	return false, nil
 }
 
 func (app *MyConfig) parseSectionName(line string) (string, error) {
 	sectionName := line[1 : len(line)-1]
 	sectionName = app.removeWhiteSpace(sectionName)
+	if check := app.Contains(sectionName, whiteCharacter); check{
+		return sectionName, fmt.Errorf(sectionName+" : Section name에 공백이 들어가 있습니다.")
+	}
 	return sectionName, nil
 }
 
@@ -94,14 +102,13 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 	for {
 		line, isPrefix, err := reader.ReadLine()
 		if isPrefix {
-			return ret, fmt.Errorf("byte로 담을 수 없는 길이입니다.")
+			return ret, fmt.Errorf(string(line) + " : byte로 담을 수 없는 길이입니다.")
 		}
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
-
-			fmt.Println(err)
+			return ret, err
 		}
 		if len(line) == 0 {
 			continue
@@ -112,8 +119,9 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 
 		// 섹션이 시작되었는가?
 		//buff = string
-		// Todo: value => string or int 구분 어떻게 할 것 인지
-		if app.IsSection(buff) == true {
+		if _, err := app.IsSection(buff); err != nil {
+			return ret, err
+		} else if check, _ := app.IsSection(buff); check == true {
 			// Parse Section name
 			sectionName, err = app.parseSectionName(buff)
 			if err != nil {
@@ -130,8 +138,16 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 
 			key = app.removeWhiteSpace(key)
 			value = app.removeWhiteSpace(value)
-			host := ret[sectionName].(map[string]interface{})
-			host[key] = value
+
+			host, ok := ret[sectionName].(map[string]interface{})
+			if !ok {
+				return ret, fmt.Errorf("asdf")
+			}
+			if _, err := strconv.Atoi(value); err != nil {
+				host[key] = value
+			} else {
+				host[key], _ = strconv.Atoi(value)
+			}
 		} else {
 			continue
 		}
@@ -141,24 +157,25 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 
 func (app *MyConfig) GetSection() {
 }
+
 func (app *MyConfig) GetParamInteger() {
 }
+
 func (app *MyConfig) GetParamString() {
 }
+
 func (app *MyConfig) GetParamBoolean() {
 }
+
 func main() {
-	confFileName := "src/practice0109/config.conf"
+	confFileName := "src/practice0113/config.conf"
 
 	conf := MyConfig{}
-	//err := conf.Init(confFileName)
-
-	if _, err := conf.Init(confFileName); err != nil {
+	confRet, err := conf.Init(confFileName)
+	if err != nil {
 		fmt.Println(err)
-		// error
 		return
 	} else {
-		confRet, _ := conf.Init(confFileName)
 		conf.FileName = confFileName
 		conf.Sections = confRet
 	}

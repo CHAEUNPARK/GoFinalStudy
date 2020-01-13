@@ -64,7 +64,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		if len(line) == 0{
+		if len(line) == 0 {
 			continue
 		}
 		if check := Find(line, sBracketF); check == 0 {
