@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 type SectionA struct {
@@ -135,28 +134,27 @@ type MyConfig struct {
 	FileName string
 }
 
-func (app *MyConfig) Contains(bs []byte, b byte) bool {
-	for _, value := range bs {
-		if b == value {
+func (app *MyConfig) Contains(str string, c string) bool {
+	for _, value := range str {
+		if c == string(value) {
 			return true
 		}
 	}
 	return false
 }
 
-func (app *MyConfig) Find(bs []byte, b byte) int {
-	for i, value := range bs {
-		if b == value {
+func (app *MyConfig) Find(str string, c string) int {
+	for i, value := range str {
+		if c == string(value) {
 			return i
 		}
 	}
-	return len(bs)
+	return len(str)
 }
 
 const whiteCharacter string = "\n\r \t"
 
-func (app *MyConfig) removeWhiteSpace(line string) (ret string) {
-	// TODO
+func (app *MyConfig) removeWhiteSpace(line string) string {
 	// TRIM Left : 문자열의 왼쪽 화이트 스페이스를 제거한다.
 	// TRIM Right : 문자열의 오른쪽 화이트 스페이스를 제거한다.
 	// '    [    sectionA    ]   '
@@ -169,14 +167,25 @@ func (app *MyConfig) removeWhiteSpace(line string) (ret string) {
 	// 대괄호 추출
 	// section name이 아닐 경우 대괄호 체크 x
 	// 값일 경우에도 똑같이 오른쪽 왼쪽만 제거
-
-	for i := 0; i < len(whiteCharacter); i++ {
-		line = strings.ReplaceAll(line, string(whiteCharacter[i]), "")
+	for {
+		linechar := string(line[0])
+		if app.Contains(whiteCharacter, linechar) {
+			line = line[1:]
+		} else {
+			break
+		}
 	}
-	fmt.Println(line)
-	ret = line
 
-	return ret
+	for {
+		linechar := string(line[len(line)-1])
+		if app.Contains(whiteCharacter, linechar) {
+			line = line[:len(line)-1]
+		} else {
+			break
+		}
+	}
+
+	return line
 }
 
 func (app *MyConfig) Init(confFile string) error {
@@ -191,6 +200,17 @@ func (app *MyConfig) Init(confFile string) error {
 	// 2. config를 파싱한다.
 	//return app.Parse(fo)
 	return err
+}
+
+func (app *MyConfig) IsSection(line string) bool {
+	var sBracketF string = "["
+	var sBracketB string = "]"
+	if check := app.Find(line, sBracketF); check == 0 {
+		if check := app.Find(line, sBracketB); check == len(line)-1 {
+			return true
+		}
+	}
+	return false
 }
 
 // TODO : return type
@@ -312,8 +332,15 @@ func main() {
 	//confFileName := "src/practice0109/config.conf"
 
 	conf := MyConfig{}
-	ret := conf.removeWhiteSpace("2039 dfdf 838 	fsfsd\n\t\r")
+	ret := conf.removeWhiteSpace("   2039 dfdf 838 	fsfsd\n\t\r")
+
 	fmt.Println(ret)
+
+	fmt.Println(conf.IsSection(ret))
+	test := "[Sectionasdf]"
+	fmt.Println(conf.Find(test,"["))
+	fmt.Println(conf.Find(test, "]"))
+	fmt.Println(conf.IsSection(test))
 	//if err := conf.Init(confFileName); err != nil {
 	//	// error
 	//	return
