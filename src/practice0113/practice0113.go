@@ -18,7 +18,7 @@ type MyConfig struct {
 
 func (app *MyConfig) Contains(str string, c string) bool {
 	for _, value := range str {
-		for _, cValue := range c{
+		for _, cValue := range c {
 			if cValue == value {
 				return true
 			}
@@ -37,27 +37,47 @@ func (app *MyConfig) Find(str string, c string) int {
 }
 
 const whiteCharacter string = "\n\r \t"
+const sBracketF string = "["
+const sBracketB string = "]"
+
+
+func (app *MyConfig) LeftTrim(str string) string {
+	for i, value := range str {
+		isWhiteChar := false
+		for _, cValue := range whiteCharacter{
+			if cValue == value {
+				isWhiteChar = true
+				break
+			}
+		}
+
+		if  isWhiteChar == false {
+			return str[i:]
+		}
+	}
+	return str
+}
+func (app *MyConfig) RightTrim(str string) string {
+	size := len(str)
+	for i := size -1; i >= 0; i-- {
+		isWhiteChar := false
+		for j := 0 ; j < len(whiteCharacter); j++ {
+			if str[i] == whiteCharacter[j] {
+				isWhiteChar = true
+				break
+			}
+		}
+
+		if  isWhiteChar == false {
+			return str[:i+1]
+		}
+	}
+	return str
+}
 
 func (app *MyConfig) removeWhiteSpace(line string) string {
-	var c string
-	for {
-		c = string(line[0])
-		if app.Contains(c, whiteCharacter) {
-			line = line[1:]
-		} else {
-			break
-		}
-	}
-
-	for {
-		c = string(line[len(line)-1])
-		if app.Contains(c, whiteCharacter) {
-			line = line[:len(line)-1]
-		} else {
-			break
-		}
-	}
-	return line
+	s := app.LeftTrim(line)
+	return app.RightTrim(s)
 }
 
 func (app *MyConfig) Init(confFile string) (ret map[string]interface{}, err error) {
@@ -74,22 +94,26 @@ func (app *MyConfig) Init(confFile string) (ret map[string]interface{}, err erro
 }
 
 func (app *MyConfig) IsSection(line string) (bool, error) {
-	var sBracketF string = "["
-	var sBracketB string = "]"
-	if check := app.Find(line, sBracketF); check == 0 {
-		if check := app.Find(line, sBracketB); check == len(line)-1 {
-			return true, nil
-		}
+
+	if line[0] == '[' && line[len(line)-1] == ']' {
+		return true, nil
+	} else if line[0] == '[' {
 		return false, fmt.Errorf(line + " : ]가 없습니다.")
+	} else if line[len(line)-1] == ']' {
+		return false, fmt.Errorf(line + " : ]가 없습니다.")
+	} else {
+		return false, nil
 	}
+
 	return false, nil
 }
 
 func (app *MyConfig) parseSectionName(line string) (string, error) {
-	sectionName := line[1 : len(line)-1]
-	sectionName = app.removeWhiteSpace(sectionName)
-	if check := app.Contains(sectionName, whiteCharacter); check{
-		return sectionName, fmt.Errorf(sectionName+" : Section name에 공백이 들어가 있습니다.")
+	sectionName := app.removeWhiteSpace(line[1 : len(line)-1])
+	if check := app.Contains(sectionName, whiteCharacter); check {
+		return sectionName, fmt.Errorf(sectionName + " : Section name에 공백이 들어가 있습니다.")
+	} else if check := app.Contains(sectionName, sBracketF+sBracketB); check {
+		return sectionName, fmt.Errorf(sectionName + " : Section name에 유효하지 않은 문자가 들어가 있습니다.")
 	}
 	return sectionName, nil
 }
@@ -110,18 +134,18 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 			}
 			return ret, err
 		}
-		if len(line) == 0 {
-			continue
-		}
 
 		// Remove White Space
 		buff := app.removeWhiteSpace(string(line))
 
+		if len(buff) == 0 {
+			continue
+		}
 		// 섹션이 시작되었는가?
 		//buff = string
-		if _, err := app.IsSection(buff); err != nil {
+		if check, err := app.IsSection(buff); err != nil {
 			return ret, err
-		} else if check, _ := app.IsSection(buff); check == true {
+		} else if check == true {
 			// Parse Section name
 			sectionName, err = app.parseSectionName(buff)
 			if err != nil {
@@ -133,16 +157,15 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 			ret[sectionName] = section
 		} else if sectionName != "" {
 			// Parse Identified
-			key := strings.Split(buff, "=")[0]
-			value := strings.Split(buff, "=")[1]
+			data := strings.Split(buff, "=")
+			key := data[0]
+			value := data[1]
 
 			key = app.removeWhiteSpace(key)
 			value = app.removeWhiteSpace(value)
 
-			host, ok := ret[sectionName].(map[string]interface{})
-			if !ok {
-				return ret, fmt.Errorf("asdf")
-			}
+			host := ret[sectionName].(map[string]interface{})
+			//문자열 체크 ""
 			if _, err := strconv.Atoi(value); err != nil {
 				host[key] = value
 			} else {
@@ -155,18 +178,44 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 	return ret, nil
 }
 
-func (app *MyConfig) GetSection() {
+//Todo:작성
+func (app *MyConfig) GetSectionList(conf MyConfig) (ret []string, err error) {
+	if len(conf.Sections) == 0{
+		return ret, fmt.Errorf("No sections")
+	}
+	for key, _ := range conf.Sections{
+		ret = append(ret, key)
+	}
+	return ret, nil
+}
+func (app *MyConfig) GetSection(conf MyConfig, section string) (ret []map[string]interface{}, err error) {
+	return ret, nil
+}
+func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
+	return ret, nil
 }
 
-func (app *MyConfig) GetParamInteger() {
+func (app *MyConfig) GetParamString(section string, param string) (ret string, err error) {
+	return ret, nil
 }
 
-func (app *MyConfig) GetParamString() {
+func (app *MyConfig) GetParamBoolean(section string, param string) (ret string, err error) {
+	return ret, nil
 }
 
-func (app *MyConfig) GetParamBoolean() {
+func (app *MyConfig) SetParamInteger(section string, param string) (ret int, err error) {
+	return ret, nil
 }
 
+func (app *MyConfig) SetParamString(section string, param string) (ret string, err error) {
+	return ret, nil
+}
+
+func (app *MyConfig) SetParamBoolean(section string, param string) (ret string, err error) {
+	return ret, err
+}
+
+//func (app *MyConfig) WriteConfig() error
 func main() {
 	confFileName := "src/practice0113/config.conf"
 
@@ -181,7 +230,11 @@ func main() {
 	}
 
 	fmt.Println(conf)
-	for key, value := range conf.Sections {
-		fmt.Println(key, value)
+	sections, err := conf.GetSectionList(conf)
+	if err != nil{
+		fmt.Println(err)
+		return
 	}
+	fmt.Println(sections)
+
 }
