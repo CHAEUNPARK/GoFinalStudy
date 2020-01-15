@@ -195,6 +195,12 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 				//bool -> true / false
 			*/
 
+			// "제거하고 순수 스트링만 넣음
+			// "으면 integer 인지 boolean인지 체크
+
+			host[key] = value
+
+			/* org
 			if valInt, err := strconv.Atoi(value); err != nil {
 				if valBool, err := strconv.ParseBool(value); err != nil {
 					if value[0] == '"' && value[len(value)-1] == '"' {
@@ -208,6 +214,7 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 			} else {
 				host[key] = valInt
 			}
+			*/
 			//value, err := app.typeCheck(value)
 			//if err!=nil{
 			//	return ret, err
@@ -248,17 +255,6 @@ func (app *MyConfig) GetSection(section string) (ret map[string]interface{}, err
 	return ret, nil
 }
 
-/*
-func (app *MyConfig) GetValue(conf MyConfig, secName string, paramName string) (ret interface{}, err error){
-	host := conf.Sections[secName].(map[string]interface{})
-	switch host[paramName].(type) {
-	case int:
-
-	}
-	return ret, nil
-}
-*/
-
 func (app *MyConfig) SectionCheck(section string) (ret map[string]interface{}, err error) {
 	host, ok := app.Sections[section].(map[string]interface{})
 	if !ok {
@@ -266,9 +262,12 @@ func (app *MyConfig) SectionCheck(section string) (ret map[string]interface{}, e
 	}
 	return host, nil
 }
-
+/*
 func (app *MyConfig) KeyCheck(section string, param string) (ret map[string]interface{}, err error) {
 	host, err := app.SectionCheck(section)
+	if err != nil {
+		return ret, err
+	}
 
 	_, ok := host[param]
 	if !ok {
@@ -276,7 +275,20 @@ func (app *MyConfig) KeyCheck(section string, param string) (ret map[string]inte
 	}
 	return host, nil
 }
+*/
+func (app *MyConfig) KeyCheck(section string, param string) (ret map[string]interface{}, err error) {
+	host, err := app.SectionCheck(section)
+	if err != nil {
+		return ret, err
+	}
 
+	_, ok := host[param]
+	if !ok {
+		return ret, fmt.Errorf("There is no key name : " + param)
+	}
+	return host, nil
+}
+/*
 func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
 	host, err := app.KeyCheck(section, param)
 
@@ -288,9 +300,28 @@ func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err
 	return value, nil
 }
 
-func (app *MyConfig) GetParamString(section string, param string) (ret string, err error) {
+*/
+func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
 	host, err := app.KeyCheck(section, param)
 
+	// map[string]string
+	value, ok := host[param].(string)
+	if ok == false {
+		// empty
+		return ret, fmt.Errorf("empty param")
+	}
+	if ret, err = strconv.Atoi(value); err != nil {
+		return
+	} else {
+		return ret, nil
+	}
+}
+
+func (app *MyConfig) GetParamString(section string, param string) (ret string, err error) {
+	host, err := app.KeyCheck(section, param)
+	if err != nil {
+		return ret, err
+	}
 	value, ok := host[param].(string)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not string")
@@ -301,7 +332,9 @@ func (app *MyConfig) GetParamString(section string, param string) (ret string, e
 
 func (app *MyConfig) GetParamBoolean(section string, param string) (ret bool, err error) {
 	host, err := app.KeyCheck(section, param)
-
+	if err != nil {
+		return ret, err
+	}
 	value, ok := host[param].(bool)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not boolean")
