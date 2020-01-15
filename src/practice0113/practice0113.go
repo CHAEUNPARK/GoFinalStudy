@@ -229,10 +229,9 @@ func (app *MyConfig) GetSectionList() (ret []string, err error) {
 }
 
 func (app *MyConfig) GetSection(section string) (ret map[string]interface{}, err error) {
-	host, ok := app.Sections[section].(map[string]interface{})
-	if !ok {
-		//host = make(map[string]interface{})
-		return ret, fmt.Errorf("There is no Section name : " + section)
+	host, err := app.SectionCheck(section)
+	if err != nil {
+		return ret, err
 	}
 	ret = map[string]interface{}{}
 	if len(host) != 0 {
@@ -256,81 +255,56 @@ func (app *MyConfig) GetValue(conf MyConfig, secName string, paramName string) (
 	return ret, nil
 }
 */
-func (app *MyConfig) IsCheck(section string, param string) (ret map[string]interface{}, err error) {
+
+func (app *MyConfig) SectionCheck(section string) (ret map[string]interface{}, err error) {
 	host, ok := app.Sections[section].(map[string]interface{})
-	if !ok{
+	if !ok {
 		return ret, fmt.Errorf("There is no section name : " + section)
 	}
+	return host, nil
+}
 
-	_, ok = host[param]
-	if !ok{
-		return ret, fmt.Errorf("There is no key name : "+param)
+func (app *MyConfig) KeyCheck(section string, param string) (ret map[string]interface{}, err error) {
+	host, err := app.SectionCheck(section)
+
+	_, ok := host[param]
+	if !ok {
+		return ret, fmt.Errorf("There is no key name : " + param)
 	}
 	return host, nil
 }
 
 func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
-	//host, ok := app.Sections[section].(map[string]interface{})
-	//if !ok {
-	//	return ret, fmt.Errorf("There is no section name : " + section)
-	//}
-	//
-	//_, ok = host[param]
-	//if !ok {
-	//	return ret, fmt.Errorf("There is no key name : " + param)
-	//}
-	host, err := app.IsCheck(section, param)
+	host, err := app.KeyCheck(section, param)
 
 	value, ok := host[param].(int)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not int")
 	}
 
-	ret = value
-
-	return ret, nil
+	return value, nil
 }
 
 func (app *MyConfig) GetParamString(section string, param string) (ret string, err error) {
-	host, ok := app.Sections[section].(map[string]interface{})
-	if !ok {
-		return ret, fmt.Errorf("There is no section name : " + section)
-	}
-
-	_, ok = host[param]
-	if !ok {
-		return ret, fmt.Errorf("There is no key name : " + param)
-	}
+	host, err := app.KeyCheck(section, param)
 
 	value, ok := host[param].(string)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not string")
 	}
 
-	ret = value
-
-	return ret, nil
+	return value, nil
 }
 
 func (app *MyConfig) GetParamBoolean(section string, param string) (ret bool, err error) {
-	host, ok := app.Sections[section].(map[string]interface{})
-	if !ok {
-		return ret, fmt.Errorf("There is no section name : " + section)
-	}
-
-	_, ok = host[param]
-	if !ok {
-		return ret, fmt.Errorf("There is no key name : " + param)
-	}
+	host, err := app.KeyCheck(section, param)
 
 	value, ok := host[param].(bool)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not boolean")
 	}
 
-	ret = value
-
-	return ret, nil
+	return value, nil
 }
 
 func (app *MyConfig) SetParamInteger(section string, param string) (ret int, err error) {
@@ -413,7 +387,7 @@ func main() {
 	fmt.Println(getInt)
 
 	sec, err = conf.GetSection("SectionD")
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -432,8 +406,6 @@ func main() {
 		return
 	}
 	fmt.Println(getBool)
-
-
 
 	//tc, err := conf.typeCheck("true")
 	//fmt.Println(tc, err)
