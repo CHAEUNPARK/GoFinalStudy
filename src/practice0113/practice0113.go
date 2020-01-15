@@ -36,6 +36,24 @@ func (app *MyConfig) Find(str string, c string) int {
 	return len(str)
 }
 
+func (app *MyConfig) typeCheck(str string) (ret string, err error) {
+	if _, err := strconv.Atoi(str); err != nil {
+		if _, err := strconv.ParseBool(str); err != nil {
+			if str[0] == '"' && str[len(str)-1] == '"' {
+				return "string", nil
+			} else if str[0] == '"' || str[len(str)-1] == '"' {
+				return ret, fmt.Errorf("Invalid Syntax : " + str)
+			} else {
+				return "string", nil
+			}
+		} else {
+			return "bool", nil
+		}
+	} else {
+		return "int", nil
+	}
+}
+
 const whiteCharacter string = "\n\r \t"
 const sBracketF string = "["
 const sBracketB string = "]"
@@ -56,6 +74,7 @@ func (app *MyConfig) LeftTrim(str string) string {
 	}
 	return str
 }
+
 func (app *MyConfig) RightTrim(str string) string {
 	size := len(str)
 	for i := size - 1; i >= 0; i-- {
@@ -79,17 +98,21 @@ func (app *MyConfig) removeWhiteSpace(line string) string {
 	return app.RightTrim(s)
 }
 
-func (app *MyConfig) Init(confFile string) (ret map[string]interface{}, err error) {
+func (app *MyConfig) Init(confFile string) error {
 	// 1. 파일을 읽는다.
 	fo, err := os.Open(confFile)
 	if err != nil {
-		return ret, err
+		return err
 	}
 	defer fo.Close()
-
+	app.FileName = confFile
 	// 2. config를 파싱한다.
-	ret, err = app.Parse(fo)
-	return ret, err
+	app.Sections, err = app.Parse(fo)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 func (app *MyConfig) IsSection(line string) (bool, error) {
@@ -176,6 +199,8 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 				if valBool, err := strconv.ParseBool(value); err != nil {
 					if value[0] == '"' && value[len(value)-1] == '"' {
 						host[key] = value[1 : len(value)-1]
+					} else if value[0] == '"' || value[len(value)-1] == '"' {
+						return ret, fmt.Errorf("Invalid Syntax : \"가 없습니다.(" + buff + ")")
 					} else {
 						host[key] = value
 					}
@@ -206,14 +231,15 @@ func (app *MyConfig) GetSectionList() (ret []string, err error) {
 func (app *MyConfig) GetSection(section string) (ret map[string]interface{}, err error) {
 	host, ok := app.Sections[section].(map[string]interface{})
 	if !ok {
-		host = make(map[string]interface{})
+		//host = make(map[string]interface{})
+		return ret, fmt.Errorf("There is no Section name : " + section)
 	}
 	ret = map[string]interface{}{}
-	if len(host) != 0{
+	if len(host) != 0 {
 		for key, value := range host {
 			ret[key] = value
 		}
-	}else{
+	} else {
 		return ret, fmt.Errorf("Empty Section")
 	}
 
@@ -230,34 +256,80 @@ func (app *MyConfig) GetValue(conf MyConfig, secName string, paramName string) (
 	return ret, nil
 }
 */
+func (app *MyConfig) IsCheck(section string, param string) (ret map[string]interface{}, err error) {
+	host, ok := app.Sections[section].(map[string]interface{})
+	if !ok{
+		return ret, fmt.Errorf("There is no section name : " + section)
+	}
+
+	_, ok = host[param]
+	if !ok{
+		return ret, fmt.Errorf("There is no key name : "+param)
+	}
+	return host, nil
+}
 
 func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
-	host := app.Sections[section].(map[string]interface{})
+	//host, ok := app.Sections[section].(map[string]interface{})
+	//if !ok {
+	//	return ret, fmt.Errorf("There is no section name : " + section)
+	//}
+	//
+	//_, ok = host[param]
+	//if !ok {
+	//	return ret, fmt.Errorf("There is no key name : " + param)
+	//}
+	host, err := app.IsCheck(section, param)
+
 	value, ok := host[param].(int)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not int")
 	}
+
 	ret = value
+
 	return ret, nil
 }
 
 func (app *MyConfig) GetParamString(section string, param string) (ret string, err error) {
-	host := app.Sections[section].(map[string]interface{})
+	host, ok := app.Sections[section].(map[string]interface{})
+	if !ok {
+		return ret, fmt.Errorf("There is no section name : " + section)
+	}
+
+	_, ok = host[param]
+	if !ok {
+		return ret, fmt.Errorf("There is no key name : " + param)
+	}
+
 	value, ok := host[param].(string)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not string")
 	}
+
 	ret = value
+
 	return ret, nil
 }
 
 func (app *MyConfig) GetParamBoolean(section string, param string) (ret bool, err error) {
-	host := app.Sections[section].(map[string]interface{})
+	host, ok := app.Sections[section].(map[string]interface{})
+	if !ok {
+		return ret, fmt.Errorf("There is no section name : " + section)
+	}
+
+	_, ok = host[param]
+	if !ok {
+		return ret, fmt.Errorf("There is no key name : " + param)
+	}
+
 	value, ok := host[param].(bool)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not boolean")
 	}
+
 	ret = value
+
 	return ret, nil
 }
 
@@ -278,13 +350,10 @@ func main() {
 	confFileName := "src/practice0113/config.conf"
 
 	conf := MyConfig{}
-	confRet, err := conf.Init(confFileName)
+	err := conf.Init(confFileName)
 	if err != nil {
 		fmt.Println(err)
 		return
-	} else {
-		conf.FileName = confFileName
-		conf.Sections = confRet
 	}
 
 	fmt.Println(conf)
@@ -318,4 +387,62 @@ func main() {
 
 	sec, err := conf.GetSection("SectionD")
 	fmt.Println(sec)
+
+	confFileName = "src/practice0109/config.conf"
+
+	conf = MyConfig{}
+	err = conf.Init(confFileName)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println(conf)
+	sections, err = conf.GetSectionList()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(sections)
+
+	getInt, err = conf.GetParamInteger("SectionA", "A")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(getInt)
+
+	sec, err = conf.GetSection("SectionD")
+	if err != nil{
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(sec)
+
+	getStr, err = conf.GetParamString("SectionC", "E")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(getStr)
+
+	getBool, err = conf.GetParamBoolean("SectionD", "G")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(getBool)
+
+
+
+	//tc, err := conf.typeCheck("true")
+	//fmt.Println(tc, err)
+	//tc1, err := conf.typeCheck("1")
+	//fmt.Println(tc1, err)
+	//tc2, err := conf.typeCheck("\"dfssadf\"")
+	//fmt.Println(tc2, err)
+	//
+	//tc3, err := conf.typeCheck("\"fdfdfdfdfd")
+	//fmt.Println(tc3, err)
+
 }
