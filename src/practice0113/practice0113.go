@@ -36,21 +36,21 @@ func (app *MyConfig) Find(str string, c string) int {
 	return len(str)
 }
 
-func (app *MyConfig) typeCheck(str string) (ret string, err error) {
-	if _, err := strconv.Atoi(str); err != nil {
-		if _, err := strconv.ParseBool(str); err != nil {
+func (app *MyConfig) typeCheck(str string) (ret interface{}, err error) {
+	if valInt, err := strconv.Atoi(str); err != nil {
+		if valBool, err := strconv.ParseBool(str); err != nil {
 			if str[0] == '"' && str[len(str)-1] == '"' {
-				return "string", nil
+				return str, nil
 			} else if str[0] == '"' || str[len(str)-1] == '"' {
 				return ret, fmt.Errorf("Invalid Syntax : " + str)
 			} else {
-				return "string", nil
+				return str, nil
 			}
 		} else {
-			return "bool", nil
+			return valBool, nil
 		}
 	} else {
-		return "int", nil
+		return valInt, nil
 	}
 }
 
@@ -195,21 +195,24 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 				//bool -> true / false
 			*/
 
-			if _, err := strconv.Atoi(value); err != nil {
+			if valInt, err := strconv.Atoi(value); err != nil {
 				if valBool, err := strconv.ParseBool(value); err != nil {
 					if value[0] == '"' && value[len(value)-1] == '"' {
 						host[key] = value[1 : len(value)-1]
-					} else if value[0] == '"' || value[len(value)-1] == '"' {
-						return ret, fmt.Errorf("Invalid Syntax : \"가 없습니다.(" + buff + ")")
 					} else {
-						host[key] = value
+						return ret, fmt.Errorf("Invalid Syntax : \"가 없습니다.(" + buff + ")")
 					}
 				} else {
 					host[key] = valBool
 				}
 			} else {
-				host[key], _ = strconv.Atoi(value)
+				host[key] = valInt
 			}
+			//value, err := app.typeCheck(value)
+			//if err!=nil{
+			//	return ret, err
+			//}
+
 		} else {
 			continue
 		}
@@ -217,7 +220,7 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 	return ret, nil
 }
 
-//Todo:작성
+//Todo: 사용자
 func (app *MyConfig) GetSectionList() (ret []string, err error) {
 	if len(app.Sections) == 0 {
 		return ret, fmt.Errorf("No sections")
