@@ -279,6 +279,10 @@ func (app *MyConfig) GetParamBoolean(section string, param string) (ret bool, er
 	}
 }
 
+//Todo: file write
+//Section 존재할 경우 그밑에 쓰기
+//Section 존재하지 않는 경우 맨 밑에 쓰기
+
 func (app *MyConfig) SetParamInteger(section string, key string, value int) {
 	//fo, err := os.Open(app.FileName)
 	//if err != nil{
@@ -295,10 +299,12 @@ func (app *MyConfig) SetParamInteger(section string, key string, value int) {
 }
 
 func (app *MyConfig) SetParamString(section string, key string, value string) {
-	if app.Contains(value, whiteCharacter){
-		fmt.Println("Invalid value : "+value+"(유효하지 않은 문자가 들어가 있습니다.)")
+	//Todo:file 저장 시 "" 붙일것
+
+	if app.Contains(value, whiteCharacter) {
+		fmt.Println("Invalid value : " + value + "(유효하지 않은 문자가 들어가 있습니다.)")
 		return
-	} else{
+	} else {
 		app.Sections[section][key] = value
 	}
 
