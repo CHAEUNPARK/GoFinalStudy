@@ -40,18 +40,17 @@ const whiteCharacter string = "\n\r \t"
 const sBracketF string = "["
 const sBracketB string = "]"
 
-
 func (app *MyConfig) LeftTrim(str string) string {
 	for i, value := range str {
 		isWhiteChar := false
-		for _, cValue := range whiteCharacter{
+		for _, cValue := range whiteCharacter {
 			if cValue == value {
 				isWhiteChar = true
 				break
 			}
 		}
 
-		if  isWhiteChar == false {
+		if isWhiteChar == false {
 			return str[i:]
 		}
 	}
@@ -59,16 +58,16 @@ func (app *MyConfig) LeftTrim(str string) string {
 }
 func (app *MyConfig) RightTrim(str string) string {
 	size := len(str)
-	for i := size -1; i >= 0; i-- {
+	for i := size - 1; i >= 0; i-- {
 		isWhiteChar := false
-		for j := 0 ; j < len(whiteCharacter); j++ {
+		for j := 0; j < len(whiteCharacter); j++ {
 			if str[i] == whiteCharacter[j] {
 				isWhiteChar = true
 				break
 			}
 		}
 
-		if  isWhiteChar == false {
+		if isWhiteChar == false {
 			return str[:i+1]
 		}
 	}
@@ -180,26 +179,67 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 
 //Todo:작성
 func (app *MyConfig) GetSectionList(conf MyConfig) (ret []string, err error) {
-	if len(conf.Sections) == 0{
+	if len(conf.Sections) == 0 {
 		return ret, fmt.Errorf("No sections")
 	}
-	for key, _ := range conf.Sections{
+	for key, _ := range conf.Sections {
 		ret = append(ret, key)
 	}
 	return ret, nil
 }
-func (app *MyConfig) GetSection(conf MyConfig, section string) (ret []map[string]interface{}, err error) {
-	return ret, nil
-}
-func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
+
+/*
+func (app *MyConfig) GetSection(conf MyConfig, section string) (ret map[string]interface{}, err error) {
+	host, ok := conf.Sections[section].(map[string]interface{})
+	if !ok {
+		return ret, fmt.Errorf("Invalid Section")
+	}
+
+	for key, value := range host {
+
+		ret[key] = value
+	}
 	return ret, nil
 }
 
-func (app *MyConfig) GetParamString(section string, param string) (ret string, err error) {
+
+func (app *MyConfig) GetValue(conf MyConfig, secName string, paramName string) (ret interface{}, err error){
+	host := conf.Sections[secName].(map[string]interface{})
+	switch host[paramName].(type) {
+	case int:
+
+	}
+	return ret, nil
+}
+*/
+
+func (app *MyConfig) GetParamInteger(conf MyConfig, section string, param string) (ret int, err error) {
+	host := conf.Sections[section].(map[string]interface{})
+	value, ok := host[param].(int)
+	if !ok {
+		return ret, fmt.Errorf(section + "'s " + param + " is not int")
+	}
+	ret = value
 	return ret, nil
 }
 
-func (app *MyConfig) GetParamBoolean(section string, param string) (ret string, err error) {
+func (app *MyConfig) GetParamString(conf MyConfig, section string, param string) (ret string, err error) {
+	host := conf.Sections[section].(map[string]interface{})
+	value, ok := host[param].(string)
+	if !ok {
+		return ret, fmt.Errorf(section + "'s " + param + " is not string")
+	}
+	ret = value
+	return ret, nil
+}
+
+func (app *MyConfig) GetParamBoolean(conf MyConfig, section string, param string) (ret bool, err error) {
+	host := conf.Sections[section].(map[string]interface{})
+	value, ok := host[param].(bool)
+	if !ok {
+		return ret, fmt.Errorf(section + "'s " + param + " is not boolean")
+	}
+	ret = value
 	return ret, nil
 }
 
@@ -231,10 +271,30 @@ func main() {
 
 	fmt.Println(conf)
 	sections, err := conf.GetSectionList(conf)
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(sections)
 
+	getInt, err := conf.GetParamInteger(conf, "SectionA", "A")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(getInt)
+
+	getStr, err := conf.GetParamString(conf, "SectionC", "E")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(getStr)
+
+	getBool, err := conf.GetParamBoolean(conf, "SectionA", "A")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(getBool)
 }
