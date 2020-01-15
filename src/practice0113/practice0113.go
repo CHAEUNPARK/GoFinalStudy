@@ -12,7 +12,7 @@ import (
 // Todo:전체적으로 예외처리 추가 필요
 type MyConfig struct {
 	// section
-	Sections map[string]interface{}
+	Sections map[string]map[string]string
 	FileName string
 }
 
@@ -36,27 +36,10 @@ func (app *MyConfig) Find(str string, c string) int {
 	return len(str)
 }
 
-func (app *MyConfig) typeCheck(str string) (ret interface{}, err error) {
-	if valInt, err := strconv.Atoi(str); err != nil {
-		if valBool, err := strconv.ParseBool(str); err != nil {
-			if str[0] == '"' && str[len(str)-1] == '"' {
-				return str, nil
-			} else if str[0] == '"' || str[len(str)-1] == '"' {
-				return ret, fmt.Errorf("Invalid Syntax : " + str)
-			} else {
-				return str, nil
-			}
-		} else {
-			return valBool, nil
-		}
-	} else {
-		return valInt, nil
-	}
-}
-
 const whiteCharacter string = "\n\r \t"
 const sBracketF string = "["
 const sBracketB string = "]"
+const newLine string = "\n"
 
 func (app *MyConfig) LeftTrim(str string) string {
 	for i, value := range str {
@@ -140,10 +123,10 @@ func (app *MyConfig) parseSectionName(line string) (string, error) {
 	return sectionName, nil
 }
 
-func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
-	ret := make(map[string]interface{})
+func (app *MyConfig) Parse(fo *os.File) (map[string]map[string]string, error) {
+	ret := make(map[string]map[string]string)
 	reader := bufio.NewReader(fo)
-	var section map[string]interface{}
+	var section map[string]string
 	var sectionName string
 	for {
 		line, isPrefix, err := reader.ReadLine()
@@ -175,7 +158,7 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 				return ret, err
 			}
 			// New Section
-			section = make(map[string]interface{})
+			section = make(map[string]string)
 			ret[sectionName] = section
 		} else if sectionName != "" {
 			// Parse Identified
@@ -185,40 +168,14 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 
 			key = app.removeWhiteSpace(key)
 			value = app.removeWhiteSpace(value)
-
-			host := ret[sectionName].(map[string]interface{})
-			//문자열 체크 ""
-			//type check
-			/*
-				//int -> 숫자로만 이루어진 경우
-				string -> ""가 있는 경우
-				//bool -> true / false
-			*/
-
-			// "제거하고 순수 스트링만 넣음
-			// "으면 integer 인지 boolean인지 체크
-
-			host[key] = value
-
-			/* org
-			if valInt, err := strconv.Atoi(value); err != nil {
-				if valBool, err := strconv.ParseBool(value); err != nil {
-					if value[0] == '"' && value[len(value)-1] == '"' {
-						host[key] = value[1 : len(value)-1]
-					} else {
-						return ret, fmt.Errorf("Invalid Syntax : \"가 없습니다.(" + buff + ")")
-					}
-				} else {
-					host[key] = valBool
-				}
-			} else {
-				host[key] = valInt
-			}
-			*/
-			//value, err := app.typeCheck(value)
-			//if err!=nil{
-			//	return ret, err
+			//if value[0] == '"' && value[len(value)-1] == '"' {
+			//	value = value[1 : len(value)-1]
 			//}
+			value, err = app.valueCheck(value)
+			if err != nil {
+				return ret, err
+			}
+			ret[sectionName][key] = value
 
 		} else {
 			continue
@@ -238,121 +195,117 @@ func (app *MyConfig) GetSectionList() (ret []string, err error) {
 	return ret, nil
 }
 
-func (app *MyConfig) GetSection(section string) (ret map[string]interface{}, err error) {
+func (app *MyConfig) GetSection(section string) (ret map[string]string, err error) {
 	host, err := app.SectionCheck(section)
 	if err != nil {
 		return ret, err
 	}
-	ret = map[string]interface{}{}
+	ret = map[string]string{}
 	if len(host) != 0 {
-		for key, value := range host {
-			ret[key] = value
-		}
+		return host, nil
 	} else {
 		return ret, fmt.Errorf("Empty Section")
 	}
 
-	return ret, nil
 }
 
-func (app *MyConfig) SectionCheck(section string) (ret map[string]interface{}, err error) {
-	host, ok := app.Sections[section].(map[string]interface{})
+func (app *MyConfig) SectionCheck(section string) (ret map[string]string, err error) {
+	host, ok := app.Sections[section]
 	if !ok {
 		return ret, fmt.Errorf("There is no section name : " + section)
 	}
 	return host, nil
 }
-/*
-func (app *MyConfig) KeyCheck(section string, param string) (ret map[string]interface{}, err error) {
-	host, err := app.SectionCheck(section)
-	if err != nil {
-		return ret, err
-	}
 
-	_, ok := host[param]
-	if !ok {
-		return ret, fmt.Errorf("There is no key name : " + param)
+func (app *MyConfig) valueCheck(value string) (ret string, err error) {
+	if _, err := strconv.Atoi(value); err != nil {
+		if _, err = strconv.ParseBool(value); err != nil {
+			if value[0] == '"' && value[len(value)-1] == '"' {
+				return value[1 : len(value)-1], nil
+			} else {
+				return ret, fmt.Errorf("Invalid Syntax : " + value)
+			}
+		}
 	}
-	return host, nil
-}
-*/
-func (app *MyConfig) KeyCheck(section string, param string) (ret map[string]interface{}, err error) {
-	host, err := app.SectionCheck(section)
-	if err != nil {
-		return ret, err
-	}
-
-	_, ok := host[param]
-	if !ok {
-		return ret, fmt.Errorf("There is no key name : " + param)
-	}
-	return host, nil
-}
-/*
-func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
-	host, err := app.KeyCheck(section, param)
-
-	value, ok := host[param].(int)
-	if !ok {
-		return ret, fmt.Errorf(section + "'s " + param + " is not int")
-	}
-
 	return value, nil
 }
 
-*/
-func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
-	host, err := app.KeyCheck(section, param)
-
-	// map[string]string
-	value, ok := host[param].(string)
-	if ok == false {
-		// empty
-		return ret, fmt.Errorf("empty param")
+func (app *MyConfig) parseValue(section string, param string) (ret string, err error) {
+	host, err := app.SectionCheck(section)
+	if err != nil {
+		return ret, err
 	}
+
+	value, ok := host[param]
+	if !ok {
+		return ret, fmt.Errorf("There is no key name : " + param)
+	}
+	return value, nil
+}
+
+func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
+	value, err := app.parseValue(section, param)
+	if err != nil {
+		return ret, err
+	}
+	// map[string]string
+
 	if ret, err = strconv.Atoi(value); err != nil {
-		return
+		return ret, err
 	} else {
 		return ret, nil
 	}
 }
 
 func (app *MyConfig) GetParamString(section string, param string) (ret string, err error) {
-	host, err := app.KeyCheck(section, param)
+	value, err := app.parseValue(section, param)
 	if err != nil {
 		return ret, err
-	}
-	value, ok := host[param].(string)
-	if !ok {
-		return ret, fmt.Errorf(section + "'s " + param + " is not string")
 	}
 
 	return value, nil
 }
 
 func (app *MyConfig) GetParamBoolean(section string, param string) (ret bool, err error) {
-	host, err := app.KeyCheck(section, param)
+	value, err := app.parseValue(section, param)
 	if err != nil {
 		return ret, err
 	}
-	value, ok := host[param].(bool)
-	if !ok {
-		return ret, fmt.Errorf(section + "'s " + param + " is not boolean")
+
+	if ret, err = strconv.ParseBool(value); err != nil {
+		return ret, err
+	} else {
+		return ret, nil
+	}
+}
+
+func (app *MyConfig) SetParamInteger(section string, key string, value int) {
+	//fo, err := os.Open(app.FileName)
+	//if err != nil{
+	//	fmt.Println(err)
+	//	return
+	//}
+	//defer fo.Close()
+
+	//if _, ok := app.Sections[section]; !ok{
+	//	sectionName := "["+section+"]"
+	//	keyVal := key + "=" + strconv.Itoa(value)
+	//}
+	app.Sections[section][key] = strconv.Itoa(value)
+}
+
+func (app *MyConfig) SetParamString(section string, key string, value string) {
+	if app.Contains(value, whiteCharacter){
+		fmt.Println("Invalid value : "+value+"(유효하지 않은 문자가 들어가 있습니다.)")
+		return
+	} else{
+		app.Sections[section][key] = value
 	}
 
-	return value, nil
 }
 
-func (app *MyConfig) SetParamInteger(section string, param string) (ret int, err error) {
-	return ret, nil
-}
-
-func (app *MyConfig) SetParamString(section string, param string) (ret string, err error) {
-	return ret, nil
-}
-
-func (app *MyConfig) SetParamBoolean(section string, param string) (ret string, err error) {
-	return ret, err
+func (app *MyConfig) SetParamBoolean(section string, key string, value bool) {
+	app.Sections[section][key] = strconv.FormatBool(value)
 }
 
 //func (app *MyConfig) WriteConfig() error
@@ -398,59 +351,8 @@ func main() {
 	sec, err := conf.GetSection("SectionD")
 	fmt.Println(sec)
 
-	confFileName = "src/practice0109/config.conf"
+	conf.SetParamBoolean("SectionA", "DD", true)
 
-	conf = MyConfig{}
-	err = conf.Init(confFileName)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Println(conf)
-	sections, err = conf.GetSectionList()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(sections)
-
-	getInt, err = conf.GetParamInteger("SectionA", "A")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(getInt)
-
-	sec, err = conf.GetSection("SectionD")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(sec)
-
-	getStr, err = conf.GetParamString("SectionC", "E")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(getStr)
-
-	getBool, err = conf.GetParamBoolean("SectionD", "G")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(getBool)
-
-	//tc, err := conf.typeCheck("true")
-	//fmt.Println(tc, err)
-	//tc1, err := conf.typeCheck("1")
-	//fmt.Println(tc1, err)
-	//tc2, err := conf.typeCheck("\"dfssadf\"")
-	//fmt.Println(tc2, err)
-	//
-	//tc3, err := conf.typeCheck("\"fdfdfdfdfd")
-	//fmt.Println(tc3, err)
+	fmt.Println(conf.GetSection("SectionA"))
 
 }
