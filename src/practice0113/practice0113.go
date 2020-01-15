@@ -165,8 +165,23 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 
 			host := ret[sectionName].(map[string]interface{})
 			//문자열 체크 ""
+			//type check
+			/*
+				//int -> 숫자로만 이루어진 경우
+				string -> ""가 있는 경우
+				//bool -> true / false
+			*/
+
 			if _, err := strconv.Atoi(value); err != nil {
-				host[key] = value
+				if valBool, err := strconv.ParseBool(value); err != nil {
+					if value[0] == '"' && value[len(value)-1] == '"' {
+						host[key] = value[1 : len(value)-1]
+					} else {
+						host[key] = value
+					}
+				} else {
+					host[key] = valBool
+				}
 			} else {
 				host[key], _ = strconv.Atoi(value)
 			}
@@ -178,31 +193,34 @@ func (app *MyConfig) Parse(fo *os.File) (map[string]interface{}, error) {
 }
 
 //Todo:작성
-func (app *MyConfig) GetSectionList(conf MyConfig) (ret []string, err error) {
-	if len(conf.Sections) == 0 {
+func (app *MyConfig) GetSectionList() (ret []string, err error) {
+	if len(app.Sections) == 0 {
 		return ret, fmt.Errorf("No sections")
 	}
-	for key, _ := range conf.Sections {
+	for key, _ := range app.Sections {
 		ret = append(ret, key)
 	}
 	return ret, nil
 }
 
-/*
-func (app *MyConfig) GetSection(conf MyConfig, section string) (ret map[string]interface{}, err error) {
-	host, ok := conf.Sections[section].(map[string]interface{})
+func (app *MyConfig) GetSection(section string) (ret map[string]interface{}, err error) {
+	host, ok := app.Sections[section].(map[string]interface{})
 	if !ok {
-		return ret, fmt.Errorf("Invalid Section")
+		host = make(map[string]interface{})
+	}
+	ret = map[string]interface{}{}
+	if len(host) != 0{
+		for key, value := range host {
+			ret[key] = value
+		}
+	}else{
+		return ret, fmt.Errorf("Empty Section")
 	}
 
-	for key, value := range host {
-
-		ret[key] = value
-	}
 	return ret, nil
 }
 
-
+/*
 func (app *MyConfig) GetValue(conf MyConfig, secName string, paramName string) (ret interface{}, err error){
 	host := conf.Sections[secName].(map[string]interface{})
 	switch host[paramName].(type) {
@@ -213,8 +231,8 @@ func (app *MyConfig) GetValue(conf MyConfig, secName string, paramName string) (
 }
 */
 
-func (app *MyConfig) GetParamInteger(conf MyConfig, section string, param string) (ret int, err error) {
-	host := conf.Sections[section].(map[string]interface{})
+func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
+	host := app.Sections[section].(map[string]interface{})
 	value, ok := host[param].(int)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not int")
@@ -223,8 +241,8 @@ func (app *MyConfig) GetParamInteger(conf MyConfig, section string, param string
 	return ret, nil
 }
 
-func (app *MyConfig) GetParamString(conf MyConfig, section string, param string) (ret string, err error) {
-	host := conf.Sections[section].(map[string]interface{})
+func (app *MyConfig) GetParamString(section string, param string) (ret string, err error) {
+	host := app.Sections[section].(map[string]interface{})
 	value, ok := host[param].(string)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not string")
@@ -233,8 +251,8 @@ func (app *MyConfig) GetParamString(conf MyConfig, section string, param string)
 	return ret, nil
 }
 
-func (app *MyConfig) GetParamBoolean(conf MyConfig, section string, param string) (ret bool, err error) {
-	host := conf.Sections[section].(map[string]interface{})
+func (app *MyConfig) GetParamBoolean(section string, param string) (ret bool, err error) {
+	host := app.Sections[section].(map[string]interface{})
 	value, ok := host[param].(bool)
 	if !ok {
 		return ret, fmt.Errorf(section + "'s " + param + " is not boolean")
@@ -270,31 +288,34 @@ func main() {
 	}
 
 	fmt.Println(conf)
-	sections, err := conf.GetSectionList(conf)
+	sections, err := conf.GetSectionList()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(sections)
 
-	getInt, err := conf.GetParamInteger(conf, "SectionA", "A")
+	getInt, err := conf.GetParamInteger("SectionA", "A")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(getInt)
 
-	getStr, err := conf.GetParamString(conf, "SectionC", "E")
+	getStr, err := conf.GetParamString("SectionC", "E")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(getStr)
 
-	getBool, err := conf.GetParamBoolean(conf, "SectionA", "A")
+	getBool, err := conf.GetParamBoolean("SectionD", "G")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(getBool)
+
+	sec, err := conf.GetSection("SectionD")
+	fmt.Println(sec)
 }
