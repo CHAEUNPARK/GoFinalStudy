@@ -282,36 +282,96 @@ func (app *MyConfig) GetParamBoolean(section string, param string) (ret bool, er
 //Todo: file write
 //Section 존재할 경우 그밑에 쓰기
 //Section 존재하지 않는 경우 맨 밑에 쓰기
+//파일이 변경되었을때
+//modified time
+func (app *MyConfig) writeConfig() {
+	fo, err := os.Create(app.FileName)
+	if err!=nil{
+		fmt.Println(err)
+		os.Exit(0)
+	}
+	defer fo.Close()
+	str := ""
+	sectionNames, err:= app.GetSectionList()
+	if err != nil{
+		fmt.Println(err)
+		os.Exit(0)
+	}
+	for _, value := range sectionNames{
+		//fmt.Println(value)
+		str = str + "[" + value + "]\n"
+		params, err := app.GetSection(value)
+		if err != nil{
+			fmt.Println(err)
+			os.Exit(0)
+		}
+		for key, value := range params{
+			//fmt.Println(key, value)
+			if _, err := strconv.Atoi(value); err != nil{
+				if _, err := strconv.ParseBool(value); err != nil{
+					value = "\"" + value + "\""
+				}
+			}
+			str = str + key + " = " + value + "\n"
+		}
+	}
+	_, err = fo.Write([]byte(str))
+	if err != nil{
+		fmt.Println(err)
+		os.Exit(0)
+	}
+	fmt.Println("set param completely")
 
+}
 func (app *MyConfig) SetParamInteger(section string, key string, value int) {
-	//fo, err := os.Open(app.FileName)
-	//if err != nil{
-	//	fmt.Println(err)
-	//	return
-	//}
-	//defer fo.Close()
-
-	//if _, ok := app.Sections[section]; !ok{
-	//	sectionName := "["+section+"]"
-	//	keyVal := key + "=" + strconv.Itoa(value)
-	//}
-	app.Sections[section][key] = strconv.Itoa(value)
+	if app.Contains(section, whiteCharacter+sBracketB+sBracketF) {
+		fmt.Println("Invalid Section Name : " + section)
+		os.Exit(0)
+	}
+	host, ok := app.Sections[section]
+	if !ok {
+		newSection := make(map[string]string)
+		newSection[key] = strconv.Itoa(value)
+		app.Sections[section] = newSection
+	} else {
+		host[key] = strconv.Itoa(value)
+	}
+	app.writeConfig()
 }
 
 func (app *MyConfig) SetParamString(section string, key string, value string) {
 	//Todo:file 저장 시 "" 붙일것
 
-	if app.Contains(value, whiteCharacter) {
-		fmt.Println("Invalid value : " + value + "(유효하지 않은 문자가 들어가 있습니다.)")
-		return
-	} else {
-		app.Sections[section][key] = value
+	if app.Contains(section, whiteCharacter+sBracketB+sBracketF) {
+		fmt.Println("Invalid Section Name : " + section)
+		os.Exit(0)
 	}
+	host, ok := app.Sections[section]
+	if !ok {
+		newSection := make(map[string]string)
+		newSection[key] = value
+		app.Sections[section] = newSection
+	} else {
+		host[key] = value
+	}
+	app.writeConfig()
 
 }
 
 func (app *MyConfig) SetParamBoolean(section string, key string, value bool) {
-	app.Sections[section][key] = strconv.FormatBool(value)
+	if app.Contains(section, whiteCharacter+sBracketB+sBracketF) {
+		fmt.Println("Invalid Section Name : " + section)
+		os.Exit(0)
+	}
+	host, ok := app.Sections[section]
+	if !ok {
+		newSection := make(map[string]string)
+		newSection[key] = strconv.FormatBool(value)
+		app.Sections[section] = newSection
+	} else {
+		host[key] = strconv.FormatBool(value)
+	}
+	app.writeConfig()
 }
 
 //func (app *MyConfig) WriteConfig() error
@@ -358,7 +418,9 @@ func main() {
 	fmt.Println(sec)
 
 	conf.SetParamBoolean("SectionA", "DD", true)
-
+	conf.SetParamInteger("SectionE", "CC", 33)
+	fmt.Println(conf.GetSectionList())
+	fmt.Println(conf.GetSection("SectionE"))
 	fmt.Println(conf.GetSection("SectionA"))
 
 }
