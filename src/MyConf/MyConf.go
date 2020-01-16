@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+const whiteCharacter string = "\n\r \t"
+const sBracketF string = "["
+const sBracketB string = "]"
+const newLine string = "\n"
+
 // Todo:전체적으로 예외처리 추가 필요
 type MyConfig struct {
 	// section
@@ -36,10 +41,7 @@ func (app *MyConfig) find(str string, c string) int {
 	return len(str)
 }
 
-const whiteCharacter string = "\n\r \t"
-const sBracketF string = "["
-const sBracketB string = "]"
-const newLine string = "\n"
+
 
 func (app *MyConfig) leftTrim(str string) string {
 	for i, value := range str {
@@ -182,31 +184,6 @@ func (app *MyConfig) parse(fo *os.File) (map[string]map[string]string, error) {
 	return ret, nil
 }
 
-//Todo: 사용자
-func (app *MyConfig) GetSectionList() (ret []string, err error) {
-	if len(app.Sections) == 0 {
-		return ret, fmt.Errorf("No sections")
-	}
-	for key, _ := range app.Sections {
-		ret = append(ret, key)
-	}
-	return ret, nil
-}
-
-func (app *MyConfig) GetSection(section string) (ret map[string]string, err error) {
-	host, err := app.sectionCheck(section)
-	if err != nil {
-		return ret, err
-	}
-	ret = map[string]string{}
-	if len(host) != 0 {
-		return host, nil
-	} else {
-		return ret, fmt.Errorf("Empty Section")
-	}
-
-}
-
 func (app *MyConfig) sectionCheck(section string) (ret map[string]string, err error) {
 	host, ok := app.Sections[section]
 	if !ok {
@@ -239,6 +216,73 @@ func (app *MyConfig) parseValue(section string, param string) (ret string, err e
 		return ret, fmt.Errorf("There is no key name : " + param)
 	}
 	return value, nil
+}
+
+//Todo: file write
+//Section 존재할 경우 그밑에 쓰기
+//Section 존재하지 않는 경우 맨 밑에 쓰기
+//파일이 변경되었을때
+//modified time
+func (app *MyConfig) writeConfig() {
+	fo, err := os.Create(app.FileName)
+	if err!=nil{
+		fmt.Println(err)
+		os.Exit(0)
+	}
+	defer fo.Close()
+	str := ""
+	sectionNames, err:= app.GetSectionList()
+	if err != nil{
+		fmt.Println(err)
+		os.Exit(0)
+	}
+	for _, value := range sectionNames{
+		str = str + "[" + value + "]" + newLine
+		params, err := app.GetSection(value)
+		if err != nil{
+			fmt.Println(err)
+			os.Exit(0)
+		}
+		for key, value := range params{
+			if _, err := strconv.Atoi(value); err != nil{
+				if _, err := strconv.ParseBool(value); err != nil{
+					value = "\"" + value + "\""
+				}
+			}
+			str = str + key + " = " + value + newLine
+		}
+	}
+	_, err = fo.Write([]byte(str))
+	if err != nil{
+		fmt.Println(err)
+		os.Exit(0)
+	}
+	fmt.Println("set param completely")
+}
+
+//Todo: 사용자
+func (app *MyConfig) GetSectionList() (ret []string, err error) {
+	if len(app.Sections) == 0 {
+		return ret, fmt.Errorf("No sections")
+	}
+	for key, _ := range app.Sections {
+		ret = append(ret, key)
+	}
+	return ret, nil
+}
+
+func (app *MyConfig) GetSection(section string) (ret map[string]string, err error) {
+	host, err := app.sectionCheck(section)
+	if err != nil {
+		return ret, err
+	}
+	ret = map[string]string{}
+	if len(host) != 0 {
+		return host, nil
+	} else {
+		return ret, fmt.Errorf("Empty Section")
+	}
+
 }
 
 func (app *MyConfig) GetParamInteger(section string, param string) (ret int, err error) {
@@ -277,50 +321,6 @@ func (app *MyConfig) GetParamBoolean(section string, param string) (ret bool, er
 	}
 }
 
-//Todo: file write
-//Section 존재할 경우 그밑에 쓰기
-//Section 존재하지 않는 경우 맨 밑에 쓰기
-//파일이 변경되었을때
-//modified time
-func (app *MyConfig) writeConfig() {
-	fo, err := os.Create(app.FileName)
-	if err!=nil{
-		fmt.Println(err)
-		os.Exit(0)
-	}
-	defer fo.Close()
-	str := ""
-	sectionNames, err:= app.GetSectionList()
-	if err != nil{
-		fmt.Println(err)
-		os.Exit(0)
-	}
-	for _, value := range sectionNames{
-		//fmt.Println(value)
-		str = str + "[" + value + "]\n"
-		params, err := app.GetSection(value)
-		if err != nil{
-			fmt.Println(err)
-			os.Exit(0)
-		}
-		for key, value := range params{
-			//fmt.Println(key, value)
-			if _, err := strconv.Atoi(value); err != nil{
-				if _, err := strconv.ParseBool(value); err != nil{
-					value = "\"" + value + "\""
-				}
-			}
-			str = str + key + " = " + value + "\n"
-		}
-	}
-	_, err = fo.Write([]byte(str))
-	if err != nil{
-		fmt.Println(err)
-		os.Exit(0)
-	}
-	fmt.Println("set param completely")
-
-}
 func (app *MyConfig) SetParamInteger(section string, key string, value int) {
 	if app.contains(section, whiteCharacter+sBracketB+sBracketF) {
 		fmt.Println("Invalid Section Name : " + section)
@@ -338,8 +338,6 @@ func (app *MyConfig) SetParamInteger(section string, key string, value int) {
 }
 
 func (app *MyConfig) SetParamString(section string, key string, value string) {
-	//Todo:file 저장 시 "" 붙일것
-
 	if app.contains(section, whiteCharacter+sBracketB+sBracketF) {
 		fmt.Println("Invalid Section Name : " + section)
 		os.Exit(0)
@@ -353,7 +351,6 @@ func (app *MyConfig) SetParamString(section string, key string, value string) {
 		host[key] = value
 	}
 	app.writeConfig()
-
 }
 
 func (app *MyConfig) SetParamBoolean(section string, key string, value bool) {
