@@ -41,8 +41,6 @@ func (app *MyConfig) find(str string, c string) int {
 	return len(str)
 }
 
-
-
 func (app *MyConfig) leftTrim(str string) string {
 	for i, value := range str {
 		isWhiteChar := false
@@ -156,7 +154,6 @@ func (app *MyConfig) parse(fo *os.File) (map[string]map[string]string, error) {
 			// Parse Section name
 			sectionName, err = app.parseSectionName(buff)
 			if err != nil {
-				//fmt.Println(err)
 				return ret, err
 			}
 			// New Section
@@ -225,27 +222,27 @@ func (app *MyConfig) parseValue(section string, param string) (ret string, err e
 //modified time
 func (app *MyConfig) writeConfig() {
 	fo, err := os.Create(app.FileName)
-	if err!=nil{
+	if err != nil {
 		fmt.Println(err)
 		os.Exit(0)
 	}
 	defer fo.Close()
 	str := ""
-	sectionNames, err:= app.GetSectionList()
-	if err != nil{
+	sectionNames, err := app.GetSectionList()
+	if err != nil {
 		fmt.Println(err)
 		os.Exit(0)
 	}
-	for _, value := range sectionNames{
+	for _, value := range sectionNames {
 		str = str + "[" + value + "]" + newLine
 		params, err := app.GetSection(value)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(0)
 		}
-		for key, value := range params{
-			if _, err := strconv.Atoi(value); err != nil{
-				if _, err := strconv.ParseBool(value); err != nil{
+		for key, value := range params {
+			if _, err := strconv.Atoi(value); err != nil {
+				if _, err := strconv.ParseBool(value); err != nil {
 					value = "\"" + value + "\""
 				}
 			}
@@ -253,7 +250,7 @@ func (app *MyConfig) writeConfig() {
 		}
 	}
 	_, err = fo.Write([]byte(str))
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 		os.Exit(0)
 	}
