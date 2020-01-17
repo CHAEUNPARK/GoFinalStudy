@@ -1,15 +1,15 @@
 package main
 
 import (
-	Myconf "MyConf"
-	"fmt"
+	"MyLog"
+	"strconv"
 )
 
 func main() {
-	conf := Myconf.MyConfig{}
-	filename := "src/main/config.conf"
-	conf.Init(filename)
-	fmt.Println(conf.GetSectionList())
-	conf.SetParamInteger("SectionA", "QQQ", 2323)
-	fmt.Println(conf.GetSection("SectionA"))
+	logger := MyLog.MyLog{}
+	logger.Init()
+	for i := 0 ; i < 10 ; i++{
+		logger.WriteLogDebug(strconv.Itoa(i))
+	}
+
 }
