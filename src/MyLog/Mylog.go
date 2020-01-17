@@ -1,7 +1,6 @@
 package MyLog
 
 import (
-	Myconf "MyConf"
 	"fmt"
 	"os"
 	"path"
@@ -25,22 +24,22 @@ type MyLog struct {
 	LEVEL    int
 }
 
-func (app *MyLog) Init() error {
-	conf := Myconf.MyConfig{}
-	conf.Init("src/MyConf/config.conf")
-	path, err := conf.GetParamString("LOG", "PATH")
-	if err != nil {
-		return err
-	}
-	filename, err := conf.GetParamString("LOG", "FILENAME")
-	if err != nil {
-
-		return err
-	}
-	level, err := conf.GetParamString("LOG", "LEVEL")
-	if err != nil {
-		return err
-	}
+func (app *MyLog) Init(path string, filename string, level string) error {
+	//conf := Myconf.MyConfig{}
+	//conf.Init("src/MyConf/config.conf")
+	//path, err := conf.GetParamString("LOG", "PATH")
+	//if err != nil {
+	//	return err
+	//}
+	//filename, err := conf.GetParamString("LOG", "FILENAME")
+	//if err != nil {
+	//
+	//	return err
+	//}
+	//level, err := conf.GetParamString("LOG", "LEVEL")
+	//if err != nil {
+	//	return err
+	//}
 	app.PATH = path
 	app.FILENAME = filename
 	switch level {
