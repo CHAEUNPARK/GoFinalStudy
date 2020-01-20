@@ -1,0 +1,9 @@
+time="2020-01-20T11:49:50+09:00" level=info msg="A group of walrus emerges from the ocean" animal=walrus size=10
+time="2020-01-20T11:49:50+09:00" level=warning msg="The group's number increased tremendously!" number=122 omg=true
+time="2020-01-20T11:49:50+09:00" level=fatal msg="The ice breaks!" number=100 omg=true
+time="2020-01-20T11:49:57+09:00" level=info msg="A group of walrus emerges from the ocean" animal=walrus size=10
+time="2020-01-20T11:49:58+09:00" level=warning msg="The group's number increased tremendously!" number=122 omg=true
+time="2020-01-20T11:49:58+09:00" level=fatal msg="The ice breaks!" number=100 omg=true
+time="2020-01-20T13:00:27+09:00" level=info msg="A group of walrus emerges from the ocean" func=main.main file="C:/Users/user/GolandProjects/MyLib/src/logrustest/test.go:37" animal=walrus size=10
+time="2020-01-20T13:00:27+09:00" level=warning msg="The group's number increased tremendously!" func=main.main file="C:/Users/user/GolandProjects/MyLib/src/logrustest/test.go:42" number=122 omg=true
+time="2020-01-20T13:00:27+09:00" level=fatal msg="The ice breaks!" func=main.main file="C:/Users/user/GolandProjects/MyLib/src/logrustest/test.go:47" number=100 omg=true

@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+//Todo: set level, parameter interface, getter&setter
+
 const (
 	trace = iota
 	debug
@@ -25,21 +27,6 @@ type MyLog struct {
 }
 
 func (app *MyLog) Init(path string, filename string, level string) error {
-	//conf := Myconf.MyConfig{}
-	//conf.Init("src/MyConf/config.conf")
-	//path, err := conf.GetParamString("LOG", "PATH")
-	//if err != nil {
-	//	return err
-	//}
-	//filename, err := conf.GetParamString("LOG", "FILENAME")
-	//if err != nil {
-	//
-	//	return err
-	//}
-	//level, err := conf.GetParamString("LOG", "LEVEL")
-	//if err != nil {
-	//	return err
-	//}
 	app.PATH = path
 	app.FILENAME = filename
 	switch level {
@@ -58,7 +45,7 @@ func (app *MyLog) Init(path string, filename string, level string) error {
 	}
 	return nil
 }
-func (app *MyLog) write(log string, level string) {
+func (app *MyLog) write(msg string, level string) {
 	//Todo : file open -> 덮어쓰지 않고 밑으로 추가
 	if _, err := os.Stat(app.PATH); os.IsNotExist(err){
 		err = os.Mkdir(app.PATH, 644)
@@ -81,55 +68,68 @@ func (app *MyLog) write(log string, level string) {
 	_, fileName, lineNo := app.getInfo()
 	_, fileName = path.Split(fileName)
 
-	str := "[" + datetime + "] [" + level + "] [" + fileName + "] [line : " + strconv.Itoa(lineNo) + "] " + log + "\n"
+	str := "[" + datetime + "] [" + level + "] [" + fileName + "] [line : " + strconv.Itoa(lineNo) + "] " + msg + "\n"
 	fo.Write([]byte(str))
 	return
 }
-func (app *MyLog) WriteLogTrace(log string) {
+func (app *MyLog) WriteLogTrace(args ...interface{}) {
 	if app.LEVEL < trace {
 		return
 	}
-	app.write(log, "Trace")
+	msg := app.formatString(args)
+	app.write(msg, "Trace")
 }
 
-func (app *MyLog) WriteLogDebug(log string) {
+func (app *MyLog) WriteLogDebug(args ...interface{}) {
 	if app.LEVEL < debug {
 		return
 	}
-	app.write(log, "Debug")
+	msg := app.formatString(args)
+	app.write(msg, "Debug")
 }
 
-func (app *MyLog) WriteLogInfo(log string) {
+func (app *MyLog) WriteLogInfo(args ...interface{}) {
 	if app.LEVEL < info {
 		return
 	}
-	app.write(log, "Information")
+	msg := app.formatString(args)
+	app.write(msg, "Information")
 }
 
-func (app *MyLog) WriteLogWarn(log string) {
+func (app *MyLog) WriteLogWarn(args ...interface{}) {
 	if app.LEVEL < warn {
 		return
 	}
-	app.write(log, "Warning")
+	msg := app.formatString(args)
+	app.write(msg, "Warning")
 }
 
-func (app *MyLog) WriteLogError(log string) {
+func (app *MyLog) WriteLogError(args ...interface{}) {
 	if app.LEVEL < errC {
 		return
 	}
-	app.write(log, "Error")
+	msg := app.formatString(args)
+	app.write(msg, "Error")
 }
 
-func (app *MyLog) WriteLogFatal(log string) {
+func (app *MyLog) WriteLogFatal(args ...interface{}) {
 	if app.LEVEL < fatal {
 		return
 	}
-	app.write(log, "Fatal")
+	msg := app.formatString(args)
+	app.write(msg, "Fatal")
 }
 
 func (app *MyLog) getInfo() (string, string, int) {
 	pc, fileName, lineNo, _ := runtime.Caller(3)
 	funcName := runtime.FuncForPC(pc).Name()
 	return funcName, fileName, lineNo
+}
+func (app *MyLog) formatString(args []interface{}) string {
+	var msg string
+	for _, value := range args{
+		msg += fmt.Sprint(value)
+	}
+	return msg
 }
 

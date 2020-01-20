@@ -5,11 +5,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 )
-
+//logrus같은 경우에는 rotation 기능이 없기 때문에 rotation 기능은 hook을 이용해서 씀(보통)
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
+	log.SetReportCaller(true)
 }
 func main() {
 	fo, err := os.OpenFile(
@@ -21,6 +21,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	log.SetOutput(fo)
 	defer fo.Close()
 	log.WithFields(log.Fields{
 		"animal":"walrus",

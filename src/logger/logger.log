@@ -38,3 +38,43 @@
 [2020-01-20 10:49:20] [Debug] [main.go] [line : 12] 7
 [2020-01-20 10:49:20] [Debug] [main.go] [line : 12] 8
 [2020-01-20 10:49:20] [Debug] [main.go] [line : 12] 9
+[2020-01-20 16:16:51] [Trace] [main.go] [line : 11] [0 hihi 1]
+[2020-01-20 16:16:51] [Trace] [main.go] [line : 11] [1 hihi 2]
+[2020-01-20 16:16:51] [Trace] [main.go] [line : 11] [2 hihi 3]
+[2020-01-20 16:16:51] [Trace] [main.go] [line : 11] [3 hihi 4]
+[2020-01-20 16:16:51] [Trace] [main.go] [line : 11] [4 hihi 5]
+[2020-01-20 16:16:51] [Trace] [main.go] [line : 11] [5 hihi 6]
+[2020-01-20 16:16:51] [Trace] [main.go] [line : 11] [6 hihi 7]
+[2020-01-20 16:16:51] [Trace] [main.go] [line : 11] [7 hihi 8]
+[2020-01-20 16:16:51] [Trace] [main.go] [line : 11] [8 hihi 9]
+[2020-01-20 16:16:51] [Trace] [main.go] [line : 11] [9 hihi 10]
+[2020-01-20 16:18:04] [Trace] [main.go] [line : 11] [0 hihi 1]
+[2020-01-20 16:18:04] [Trace] [main.go] [line : 11] [1 hihi 2]
+[2020-01-20 16:18:04] [Trace] [main.go] [line : 11] [2 hihi 3]
+[2020-01-20 16:18:04] [Trace] [main.go] [line : 11] [3 hihi 4]
+[2020-01-20 16:18:04] [Trace] [main.go] [line : 11] [4 hihi 5]
+[2020-01-20 16:18:04] [Trace] [main.go] [line : 11] [5 hihi 6]
+[2020-01-20 16:18:04] [Trace] [main.go] [line : 11] [6 hihi 7]
+[2020-01-20 16:18:04] [Trace] [main.go] [line : 11] [7 hihi 8]
+[2020-01-20 16:18:04] [Trace] [main.go] [line : 11] [8 hihi 9]
+[2020-01-20 16:18:04] [Trace] [main.go] [line : 11] [9 hihi 10]
+[2020-01-20 16:22:24] [Trace] [main.go] [line : 11] 0hihi1
+[2020-01-20 16:22:24] [Trace] [main.go] [line : 11] 1hihi2
+[2020-01-20 16:22:24] [Trace] [main.go] [line : 11] 2hihi3
+[2020-01-20 16:22:24] [Trace] [main.go] [line : 11] 3hihi4
+[2020-01-20 16:22:24] [Trace] [main.go] [line : 11] 4hihi5
+[2020-01-20 16:22:24] [Trace] [main.go] [line : 11] 5hihi6
+[2020-01-20 16:22:24] [Trace] [main.go] [line : 11] 6hihi7
+[2020-01-20 16:22:24] [Trace] [main.go] [line : 11] 7hihi8
+[2020-01-20 16:22:24] [Trace] [main.go] [line : 11] 8hihi9
+[2020-01-20 16:22:24] [Trace] [main.go] [line : 11] 9hihi10
+[2020-01-20 16:26:59] [Trace] [main.go] [line : 11] 0hihi1
+[2020-01-20 16:26:59] [Trace] [main.go] [line : 11] 1hihi2
+[2020-01-20 16:26:59] [Trace] [main.go] [line : 11] 2hihi3
+[2020-01-20 16:26:59] [Trace] [main.go] [line : 11] 3hihi4
+[2020-01-20 16:26:59] [Trace] [main.go] [line : 11] 4hihi5
+[2020-01-20 16:26:59] [Trace] [main.go] [line : 11] 5hihi6
+[2020-01-20 16:26:59] [Trace] [main.go] [line : 11] 6hihi7
+[2020-01-20 16:26:59] [Trace] [main.go] [line : 11] 7hihi8
+[2020-01-20 16:26:59] [Trace] [main.go] [line : 11] 8hihi9
+[2020-01-20 16:26:59] [Trace] [main.go] [line : 11] 9hihi10
