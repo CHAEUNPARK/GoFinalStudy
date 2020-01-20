@@ -1,0 +1,3 @@
+time="2020-01-20T16:38:44+09:00" level=info msg=infolevel
+time="2020-01-20T16:41:34+09:00" level=info msg=infolevel func=main.main file="C:/Users/user/GolandProjects/MyLib/src/main/main.go:31"
+time="2020-01-20T17:00:06+09:00" level=info msg=infolevel func=main.main file="C:/Users/user/GolandProjects/MyLib/src/main/main.go:31"
