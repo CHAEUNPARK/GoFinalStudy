@@ -47,9 +47,9 @@ func (app *MyLog) Init(path string, filename string, level string) error {
 }
 func (app *MyLog) write(msg string, level string) {
 	//Todo : file open -> 덮어쓰지 않고 밑으로 추가
-	if _, err := os.Stat(app.PATH); os.IsNotExist(err){
+	if _, err := os.Stat(app.PATH); os.IsNotExist(err) {
 		err = os.Mkdir(app.PATH, 644)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -127,9 +127,8 @@ func (app *MyLog) getInfo() (string, string, int) {
 }
 func (app *MyLog) formatString(args []interface{}) string {
 	var msg string
-	for _, value := range args{
+	for _, value := range args {
 		msg += fmt.Sprint(value)
 	}
 	return msg
 }
-

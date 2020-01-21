@@ -1,18 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"reflect"
+	"github.com/sirupsen/logrus"
+	"os"
 )
 
 func main() {
-	value := 1
-	fmt.Println(reflect.TypeOf(value))
-	str := fmt.Sprintln(value)
-	fmt.Println(reflect.TypeOf(str))
-	valueB := true
-	fmt.Println(reflect.TypeOf(valueB))
-	str = fmt.Sprintln(valueB)
-	fmt.Println(reflect.TypeOf(str))
+	var log = logrus.New()
+	log.Formatter = new(logrus.TextFormatter)
+	log.Formatter.(*logrus.TextFormatter).DisableColors = true
+	log.Formatter.(*logrus.TextFormatter).DisableTimestamp = true
+	log.Level = logrus.TraceLevel
+	log.Out = os.Stdout
 
 }

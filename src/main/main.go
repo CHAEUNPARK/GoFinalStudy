@@ -15,8 +15,8 @@ func main() {
 		"src/main/logrus.log",
 		os.O_APPEND|os.O_CREATE,
 		644,
-		)
-	if err != nil{
+	)
+	if err != nil {
 		log.Fatalln("file open fail")
 	}
 	log.SetOutput(fo)

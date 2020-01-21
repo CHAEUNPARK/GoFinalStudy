@@ -1,3 +1,6 @@
 time="2020-01-20T16:38:44+09:00" level=info msg=infolevel
 time="2020-01-20T16:41:34+09:00" level=info msg=infolevel func=main.main file="C:/Users/user/GolandProjects/MyLib/src/main/main.go:31"
 time="2020-01-20T17:00:06+09:00" level=info msg=infolevel func=main.main file="C:/Users/user/GolandProjects/MyLib/src/main/main.go:31"
+[36mINFO[0m[0000]C:/Users/user/GolandProjects/MyLib/src/main/main.go:25 main.main() infolevel                                    
+time="2020-01-20T17:51:09+09:00" level=info msg=infolevel func=main.main file="C:/Users/user/GolandProjects/MyLib/src/main/main.go:25"
+time="2020-01-21T10:28:59+09:00" level=info msg=infolevel func=main.main file="C:/Users/user/GolandProjects/MyLib/src/main/main.go:25"
