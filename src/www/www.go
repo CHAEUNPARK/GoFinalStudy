@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"time"
 )
@@ -29,8 +30,15 @@ func main() {
 	} else {
 		PORT = ":" + arguments[1]
 	}
+	r := http.NewServeMux()
 	http.HandleFunc("/time", timeHandler)
 	http.HandleFunc("/", myHandler)
+
+	r.HandleFunc("/debug/pprof/", pprof.Index)
+	r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	r.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	r.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	r.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	err := http.ListenAndServe(PORT, nil)
 	if err != nil {
 		fmt.Println(err)
