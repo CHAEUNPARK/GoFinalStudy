@@ -5,7 +5,6 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo"
-	"github.com/labstack/gommon/log"
 	"net/http"
 )
 
@@ -24,15 +23,24 @@ func main() {
 }
 
 func appVersion(c echo.Context) error {
-	os := c.QueryParam("os")
+
 	r := &Response{
-		ResultCode: 0,
-		ResultDesc: "success",
+		ResultCode: 102,
+		ResultDesc: "system error : ",
 		ResultData: nil,
 	}
+
+	os := c.QueryParam("os")
+	if os != "ios" && os != "aos"{
+		r.ResultCode = 101
+		r.ResultDesc = "parameter error"
+		return c.JSON(http.StatusOK, r)
+	}
+
 	db, err := sql.Open("mysql", "chaeun:ehlswkd1@tcp(127.0.0.1:3306)/qfeat")
 	if err != nil || db.Ping() != nil {
-		log.Panic(err)
+		r.ResultDesc += "db connection error"
+		return c.JSON(http.StatusOK, r)
 	}
 	defer db.Close()
 
@@ -42,7 +50,8 @@ func appVersion(c echo.Context) error {
 	err = db.QueryRow("SELECT VERSION, URL FROM version WHERE OS = ?", os).Scan(&version, &url)
 
 	if err != nil {
-		log.Panic(err)
+		r.ResultDesc += "query error"
+		return c.JSON(http.StatusOK, r)
 	}
 
 	var app = make(map[string]interface{})
@@ -51,6 +60,9 @@ func appVersion(c echo.Context) error {
 	app["url"] = url
 	r.ResultData = make(map[string]map[string]interface{})
 	r.ResultData["app"] = app
+
+	r.ResultCode = 0
+	r.ResultDesc = "success"
 
 	return c.JSON(http.StatusOK, r)
 }
