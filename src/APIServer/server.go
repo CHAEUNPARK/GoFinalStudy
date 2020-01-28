@@ -17,7 +17,7 @@ type Response struct {
 func main() {
 	e := echo.New()
 	e.GET("/app/version", appVersion)
-
+	e.POST("/user/signup", signUp)
 	e.Logger.Fatal(e.Start(":9000"))
 
 }
@@ -64,5 +64,26 @@ func appVersion(c echo.Context) error {
 	r.ResultCode = 0
 	r.ResultDesc = "success"
 
+	return c.JSON(http.StatusOK, r)
+}
+
+func signUp(c echo.Context) error {
+	r := &Response{
+		ResultCode: 102,
+		ResultDesc: "system error : ",
+		ResultData: nil,
+	}
+
+	m := echo.Map{}
+	if err := c.Bind(&m); err!=nil{
+		r.ResultDesc += err.Error()
+		return c.JSON(http.StatusOK, r)
+	}
+	fmt.Println(m)
+	fmt.Println(m["param"])
+	r.ResultCode = 0
+	r.ResultDesc = "success"
+	r.ResultData = make(map[string]map[string]interface{})
+	r.ResultData["device"] = m
 	return c.JSON(http.StatusOK, r)
 }
