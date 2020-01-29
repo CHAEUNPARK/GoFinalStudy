@@ -1,16 +1,18 @@
 package main
 
 import (
-	"github.com/sirupsen/logrus"
-	"os"
+	"crypto/rand"
+	"fmt"
 )
 
 func main() {
-	var log = logrus.New()
-	log.Formatter = new(logrus.TextFormatter)
-	log.Formatter.(*logrus.TextFormatter).DisableColors = true
-	log.Formatter.(*logrus.TextFormatter).DisableTimestamp = true
-	log.Level = logrus.TraceLevel
-	log.Out = os.Stdout
+	dictionary := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
+	var bytes = make([]byte, 16)
+	rand.Read(bytes)
+
+	for k, v := range bytes {
+		bytes[k] = dictionary[v%byte(len(dictionary))]
+	}
+	fmt.Println(string(bytes))
 }
