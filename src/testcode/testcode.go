@@ -1,18 +1,33 @@
 package main
 
 import (
-	"crypto/rand"
+	"encoding/json"
 	"fmt"
+	"os"
 )
 
+type User struct {
+	Name    string `json:"name"`
+	Age     int    `json:"age"`
+	Country string `json:"country"`
+	Job     string `json:"job"`
+}
+
 func main() {
-	dictionary := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-
-	var bytes = make([]byte, 16)
-	rand.Read(bytes)
-
-	for k, v := range bytes {
-		bytes[k] = dictionary[v%byte(len(dictionary))]
+	var u User
+	fo, err := os.Open("src/testcode/test.json")
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
-	fmt.Println(string(bytes))
+	defer fo.Close()
+
+	dec := json.NewDecoder(fo)
+	err = dec.Decode(&u)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("%+v\n", u)
+
 }
