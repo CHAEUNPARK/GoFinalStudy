@@ -1,9 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
+	"math"
+	"math/rand"
+	"time"
 )
 
 type User struct {
@@ -14,20 +15,11 @@ type User struct {
 }
 
 func main() {
-	var u User
-	fo, err := os.Open("src/testcode/test.json")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer fo.Close()
-
-	dec := json.NewDecoder(fo)
-	err = dec.Decode(&u)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Printf("%+v\n", u)
-
+	rand.Seed(time.Now().UnixNano())
+	rate := math.Round((rand.Float64()*100)/0.005) * 0.005
+	fmt.Println(rate)
+	fmt.Println(rand.Float64())
+	fmt.Println(rand.Float64() * 100)
+	fmt.Println(rand.Float64() * 100 / 0.005)
+	fmt.Println((rand.Float64() * 100 / 0.005) * 0.005)
 }
